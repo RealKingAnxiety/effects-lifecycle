@@ -1,65 +1,175 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, useRef } from 'react';
+
+// Challenge 1: Fix reconnecting on every keystroke
+function ChatRoom({ roomId }: { roomId: string }) {
+  useEffect(() => {
+    console.log(`✅ Connecting to "${roomId}" room...`);
+    return () => console.log(`❌ Disconnected from "${roomId}" room.`);
+  }, [roomId]);
+
+  return <h2>Welcome to the {roomId} room!</h2>;
+}
+
+// Challenge 2 & 3: Moving Dot (Fixed - stays inside box)
+function MovingDot() {
+  const [position, setPosition] = useState({ x: 180, y: 130 });
+  const [canMove, setCanMove] = useState(true);
+
+  useEffect(() => {
+    function handleMove(e: MouseEvent) {
+      if (!canMove) return;
+
+      const box = document.querySelector('.moving-dot-box') as HTMLElement;
+      if (!box) return;
+
+      const rect = box.getBoundingClientRect();
+
+      let newX = e.clientX - rect.left;
+      let newY = e.clientY - rect.top;
+
+      // Clamp inside the box with padding
+      newX = Math.max(20, Math.min(newX, rect.width - 20));
+      newY = Math.max(20, Math.min(newY, rect.height - 20));
+
+      setPosition({ x: newX, y: newY });
+    }
+
+    window.addEventListener('pointermove', handleMove);
+    return () => window.removeEventListener('pointermove', handleMove);
+  }, [canMove]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="challenge">
+      <h2>2 & 3. Moving Dot</h2>
+      <label>
+        <input 
+          type="checkbox" 
+          checked={canMove} 
+          onChange={e => setCanMove(e.target.checked)} 
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        Allow dot to move
+      </label>
+      
+      <div 
+        className="moving-dot-box relative w-[400px] h-[300px] border-4 border-gray-400 bg-gray-100 mt-4 overflow-hidden rounded-xl"
+      >
+        <div
+          className="absolute w-10 h-10 bg-pink-500 rounded-full shadow-lg flex items-center justify-center text-white text-xs font-bold"
+          style={{
+            left: position.x - 20,
+            top: position.y - 20,
+          }}
+        >
+          DOT
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+    </div>
+  );
+}
+
+// Challenge 4: Fix Connection Switch
+function ChatRoomWithEncryption({ roomId, isEncrypted }: { roomId: string; isEncrypted: boolean }) {
+  useEffect(() => {
+    console.log(`Connecting to ${roomId} (${isEncrypted ? '🔒 encrypted' : '📡 unencrypted'})`);
+    return () => console.log(`Disconnected from ${roomId}`);
+  }, [roomId, isEncrypted]);
+
+  return <h2>Welcome to the {roomId} room! {isEncrypted ? '🔒' : '📡'}</h2>;
+}
+
+// Challenge 5: Populate Chain of Select Boxes
+function SelectChain() {
+  const [planetId, setPlanetId] = useState('');
+  const [placeId, setPlaceId] = useState('');
+  const [planets, setPlanets] = useState<any[]>([]);
+  const [places, setPlaces] = useState<any[]>([]);
+
+  useEffect(() => {
+    setPlanets([
+      { id: 'earth', name: 'Earth' },
+      { id: 'mars', name: 'Mars' },
+    ]);
+    setPlanetId('earth');
+  }, []);
+
+  useEffect(() => {
+    if (planetId) {
+      setPlaces([
+        { id: '1', name: 'Capital City' },
+        { id: '2', name: 'Mountains' },
+        { id: '3', name: 'Beach' },
+      ]);
+      setPlaceId('1');
+    }
+  }, [planetId]);
+
+  return (
+    <div className="challenge">
+      <h2>5. Chain of Select Boxes</h2>
+      <label>
+        Pick a planet:{' '}
+        <select value={planetId} onChange={e => setPlanetId(e.target.value)}>
+          {planets.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Pick a place:{' '}
+        <select value={placeId} onChange={e => setPlaceId(e.target.value)}>
+          {places.map(p => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      </label>
+      <p>You are going to: <b>{placeId || '???'}</b> on <b>{planetId || '???'}</b></p>
+    </div>
+  );
+}
+
+export default function EffectsLifecycle() {
+  const [roomId, setRoomId] = useState('general');
+  const [isEncrypted, setIsEncrypted] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12 px-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-5xl font-bold text-center mb-16">Lifecycle of Reactive Effects</h1>
+
+        <div className="space-y-16">
+          <div className="challenge">
+            <h2>1. Fix Reconnecting</h2>
+            <label>
+              Choose room:{' '}
+              <select value={roomId} onChange={e => setRoomId(e.target.value)}>
+                <option value="general">general</option>
+                <option value="travel">travel</option>
+                <option value="music">music</option>
+              </select>
+            </label>
+            <ChatRoom roomId={roomId} />
+          </div>
+
+          <MovingDot />
+
+          <div className="challenge">
+            <h2>4. Fix Connection Switch</h2>
+            <label>
+              <input 
+                type="checkbox" 
+                checked={isEncrypted} 
+                onChange={e => setIsEncrypted(e.target.checked)} 
+              />
+              Use encryption
+            </label>
+            <ChatRoomWithEncryption roomId={roomId} isEncrypted={isEncrypted} />
+          </div>
+
+          <SelectChain />
         </div>
-      </main>
+      </div>
     </div>
   );
 }
